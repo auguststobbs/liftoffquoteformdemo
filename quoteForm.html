@@ -1,0 +1,456 @@
+<!-- 
+Things this form does not yet do:
+* tie into the application
+* use TypeScript to run the scripting (it's currently plain ol' JavaScript)
+* auto-hide and zero-out non-available options when choosing a different property:
+   * Investment Property Move-Out does not allow: 
+      * Replenish Toiletries
+      * Plant Care
+      * Hospitality Package
+      * Laundry
+   * Office Clean does not allow:
+      * Bedrooms
+      * Cabinet Restore
+      * Grout & Tile Restore
+      * Laundry
+   * AirBNB does not allow:
+      * Bathrooms (although I assume this is an oversight)
+      * Square footage (again, possibly an oversight)
+      * Cabinet Restore
+      * Grout & Tile Restore
+      * Replinish toiletries (again, probably an oversight)
+
+Changes made from the Liftoff Grime Pricing Sheet
+* The base price didn't make sense to me, and Lisa was busy, so I just decided to break the concepts of bed, bath, and square footage into different 
+* Tier 2 Hospitality is not defined in the spreadsheet, so I just made something up.
+
+
+Things that could probably be better:
+* Many of the functions are similar enough that they could be refactored into reusable helper functions. However, only a few are calculated the exact same way.
+-->
+
+<!DOCTYPE html>
+<head>
+   <title>Quote form prototype</title>
+
+
+<style>
+    label {
+       display:block;
+    }
+    .form-group {
+       margin: 10px 0;
+       padding: 10px 0;
+    }
+ </style>
+ </head>
+ <body>
+   <h1>To get started, tell us about your place:</h1>
+   
+   <form action="#" method="POST" id="quoteForm">
+      <div class="form-group">
+         <label for="placeName">
+            What do you call this place?
+            <input type="text" id="placeName" name="placeName" />
+         </label>
+      </div>
+
+      <div class="form-group">
+         <fieldset>
+            <legend>Is this place a...</legend>
+            <label for="investmentPropertyMoveInMoveOut">
+                  <input type="radio" onclick="calculateTotal()" id="investmentPropertyMoveInMoveOut" name="selectedPlaceType" value="Investment Property Move In / Move Out" />
+                  Investment Property Move In / Move Out
+            </label>
+
+            <label for="officeClean">
+                  <input type="radio" onclick="calculateTotal()" id="officeClean" name="selectedPlaceType" value="officeClean" />
+                  Office Clean
+            </label>
+
+            <label for="AirBNB">
+                  <input type="radio" onclick="calculateTotal()" id="AirBNB" name="selectedPlaceType" value="AirBNB" />
+                  AirBNB
+            </label>
+         </fieldset>
+      </div>
+
+      <div class="form-group">
+         <label for="bedroomCount">
+            How many bedrooms does your place have?
+            <input type="number" oninput="calculateTotal()" id="bedroomCount" name="bedroomCount" min="0" max="15" step="1" />
+         </label>
+      </div>
+
+      <div class="form-group">
+         <label for="bathroomCount">
+            How many bathrooms does your place have?
+            <input type="number" oninput="calculateTotal()" id="bathroomCount" name="bathroomCount" min="0" max="15" step="1" />
+         </label>
+      </div>
+
+      <div class="form-group">
+         <label for="squareFootage">
+            What is the approximate square footage of your place?
+            <select name="squareFootage" id="squareFootage" onchange="calculateTotal()">
+                  <option value="900">900</option>
+                  <option value="1100">1100</option>
+                  <option value="1500">1500</option>
+                  <option value="1800">1800</option>
+                  <option value="2000+">2000+</option>
+            </select>
+         </label>
+      </div>
+
+      <div class="form-group">
+         <fieldset>
+            <legend>Would you like for us to take care of anything else for you?</legend>
+            <label for="appliances">
+                  <input type="checkbox" onclick="calculateTotal() " id="appliances" name="appliances" value="Appliances" />
+                  Appliances
+            </label>
+            <div class="form-group">
+                  <label for="applianceCount">
+                     How many appliances do you want cleaned?
+                     <input type="number" oninput="calculateTotal()" id="applianceCount" name="applianceCount" min="0" max="5" step="1" />
+                  </label>
+            </div>
+
+            <label for="cabinetRestore">
+                  <input type="checkbox" onclick="calculateTotal()" id="cabinetRestore" name="cabinetRestore" value="Cabinet Restoration" />
+                  Cabinet Restoration
+            </label>
+            <div class="form-group">
+                  <label for="cabinetFaceCount">
+                     How many cabinet faces do you want restored?
+                     <input type="number" oninput="calculateTotal()" id="cabinetFaceCount" name="cabinetFaceCount" min="0" max="20" step="1" />
+                  </label>
+            </div>
+
+            <label for="carpetShampoo">
+                  <input type="checkbox" onclick="calculateTotal()" id="carpetShampoo" name="carpetShampoo" value="Carpet Shampoo" />
+                  Carpet Shampoo
+            </label>
+            <div class="form-group">
+                  <label for="carpetShampooRoomCount">
+                     How many rooms do you want shampooed?
+                     <input type="number" oninput="calculateTotal()" id="carpetShampooRoomCount" name="carpetShampooRoomCount" min="0" max="10" step="1" />
+                  </label>
+            </div>
+
+            <label for="groutAndTileRestoration">
+                  <input type="checkbox" onclick="calculateTotal()" id="groutAndTileRestoration" name="groutAndTileRestoration" value="Grout and Tile Restoration" />
+                  Grout and Tile Restoration
+            </label>
+            <div class="form-group">
+                  <label for="groutAndTileRestorationSquareFootage">
+                     What is the square footage of tile you want restored?
+                     <input type="number" oninput="calculateTotal()" id="groutAndTileRestorationSquareFootage" name="groutAndTileRestorationSquareFootage" min="0" max="2000" step="1" />
+                  </label>
+            </div>
+
+            <label for="replenishToiletries">
+                  <input type="checkbox" onclick="calculateTotal()" id="replenishToiletries" name="replenishToiletries" value="Replenish Toiletries" />
+                  Replenish Toiletries
+            </label>
+
+            <label for="plantCare">
+                  <input type="checkbox" onclick="calculateTotal()" id="plantCare" name="plantCare" value="Plant Care" />
+                  Plant Care
+            </label>
+            <div class="form-group">
+                  <label for="plantCount">
+                     How many plants do you want cared for?
+                     <input type="number" oninput="calculateTotal()" id="plantCount" name="plantCount" min="0" max="50" step="1" />
+                  </label>
+            </div>
+
+            <label for="hospitality">
+                  <input type="checkbox" onclick="calculateTotal()" id="hospitality" name="hospitality" value="Hospitality" />
+                  Hospitality Package
+            </label>
+            <div class="form-group">
+                  <label for="hospitalityTier">
+                     Which tier of hospitality would you like?
+                     <select name="hospitalityTier" id="hospitalityTier" onchange="calculateTotal()">
+                        <option value="None">Select a hospitality tier</option>
+                        <option value="hospitalityTier1">Tier 1: replenish fruit, snacks, water, mints, candy, fresh flowers replinish</option>
+                        <option value="hospitalityTier2">Tier 2: Tier 1 + Phone Concierge</option>
+                     </select>
+                  </label>
+            </div>
+
+            <label for="laundry">
+                  <input type="checkbox" onclick="calculateTotal()" id="laundry" name="laundry" value="Laundry" />
+                  Laundry
+            </label>
+         </fieldset>
+      </div>
+
+      <p class="quote">
+         Based on your selections, your place will cost $<span id="quoteTotal">0</span> to clean. Want to schedule a service? Please let us know your address and submit to save your place in our system to begin scheduling a cleaning.
+      </p>
+
+      <div class="form-group">
+         <fieldset>
+            <legend>
+                  What is the address of your place?
+            </legend>
+            <label for="address1">
+                  Address
+                  <input type="text" id="address1" name="address1" />
+            </label>
+            <label for="address2">
+                  Address, line 2
+                  <input type="text" id="address2" name="address2" />
+            </label>
+            <label for="city">
+                  City
+                  <input type="text" id="city" name="city" />
+            </label>
+
+            <label for="state">
+                  State
+                  <select name="state" id="state">
+                     <option value="IL">Illinois</option>
+                     <option value="MO">Missouri</option>
+                  </select>
+            </label>
+            <label for="zipCode">
+                  Zip Code
+                  <input type="text" id="zipCode" name="zipCode" />
+            </label>
+         </fieldset>
+      </div>
+      <input type="submit" value="Save my quote" />
+   </form>
+
+</body>
+<script>
+   let theForm = document.forms["quoteForm"];
+
+   let propertyTypePrices = new Array();
+   propertyTypePrices["Investment Property Move In / Move Out"] = 100;
+   propertyTypePrices["officeClean"] = 150;
+   propertyTypePrices["AirBNB"] = 70;
+
+   let squareFootagePrices = new Array();
+   squareFootagePrices["900"] = 0;
+   squareFootagePrices["1100"] = 25;
+   squareFootagePrices["1500"] = 50;
+   squareFootagePrices["1800"] = 75;
+   squareFootagePrices["2000+"] = 100;
+
+   let hospitalityTierPrices = new Array();
+   hospitalityTierPrices["None"] = 0;
+   hospitalityTierPrices["hospitalityTier1"] = 25;
+   hospitalityTierPrices["hospitalityTier2"] = 50;
+
+   function getBedroomCount() {
+      let bedroomCount = theForm.elements["bedroomCount"];
+      let bedroomsCounted = 0;
+      if (bedroomCount.value != "") {
+         bedroomsCounted = parseInt(bedroomCount.value);
+      }
+      return bedroomsCounted;
+   }
+
+   function getBathroomCount() {
+      let bathroomCount = theForm.elements["bathroomCount"];
+      let bathroomsCounted = 0;
+      if (bathroomCount.value != "") {
+         bathroomsCounted = parseInt(bathroomCount.value);
+      }
+      return bathroomsCounted;
+   }
+
+   function getPropertyTypePrice() {
+      let propertyTypePrice = 0;
+
+      let selectedPropertyType = theForm.elements["selectedPlaceType"];
+
+      for (var i = 0; i < selectedPropertyType.length; i++) {
+         if (selectedPropertyType[i].checked) {
+               propertyTypePrice = propertyTypePrices[selectedPropertyType[i].value];
+               break;
+         }
+      }
+      return propertyTypePrice;
+   }
+
+   function getSquareFootagePrice() {
+      let squareFootagePrice = 0;
+      let squareFootage = theForm.elements["squareFootage"];
+      squareFootagePrice = squareFootagePrices[squareFootage.value];
+      return squareFootagePrice;
+   }
+
+   function getApplianceCount() {
+      let applianceCount = theForm.elements["applianceCount"];
+      let appliancesCounted = 0;
+      if (applianceCount.value != "") {
+         appliancesCounted = parseInt(applianceCount.value);
+      }
+      return appliancesCounted;
+   }
+
+   function getAppliancesPrice() {
+      let appliancesPrice = 0;
+
+      let cleanAppliances = theForm.elements["appliances"];
+
+      if (cleanAppliances.checked == true) {
+         appliancesPrice = getApplianceCount() * 25;
+      }
+      return appliancesPrice;
+   }
+
+   function getCabinetCount() {
+      let cabinetCount = theForm.elements["cabinetFaceCount"];
+      let cabinetsCounted = 0;
+      if (cabinetCount.value != "") {
+         cabinetsCounted = parseInt(cabinetCount.value);
+      }
+      return cabinetsCounted;
+   }
+
+   function getCabinetsPrice() {
+      let cabinetsPrice = 0;
+
+      let restoreCabinets = theForm.elements["cabinetRestore"];
+
+      if (restoreCabinets.checked == true) {
+         cabinetsPrice = getCabinetCount() * 25;
+      }
+      return cabinetsPrice;
+   }
+
+   function getCarpetShampooRoomCount() {
+      let carpetShampooRoomCount = theForm.elements["carpetShampooRoomCount"];
+      let carpetShampooRoomsCounted = 0;
+      if (carpetShampooRoomCount.value != "") {
+         carpetShampooRoomsCounted = parseInt(carpetShampooRoomCount.value);
+      }
+      return carpetShampooRoomsCounted;
+   }
+
+   function getCarpetShampooPrice() {
+      let carpetShampooPrice = 0;
+
+      let shampooCarpets = theForm.elements["carpetShampoo"];
+
+      if (shampooCarpets.checked == true) {
+         carpetShampooPrice = getCarpetShampooRoomCount() * 50;
+      }
+      return carpetShampooPrice;
+   }
+
+   function getPlantCount() {
+      let plantCount = theForm.elements["plantCount"];
+      let plantsCounted = 0;
+      if (plantCount.value != "") {
+         plantsCounted = parseInt(plantCount.value);
+      }
+      return plantsCounted;
+   }
+
+   function getPlantCarePrice() {
+      let plantCarePrice = 0;
+      let careForPlants = theForm.elements["plantCare"];
+
+      if (careForPlants.checked == true) {
+         plantCarePrice = getPlantCount() * 5;
+      }
+      return plantCarePrice;
+   }
+
+   function getHospitalityPackagePrice() {
+      let hospitalityPackagePrice = 0;
+      let hospitalityPackage = theForm.elements["hospitalityTier"];
+
+      if (hospitality.checked == true) {
+         hospitalityPackagePrice = hospitalityTierPrices[hospitalityPackage.value];
+      }
+      return hospitalityPackagePrice;
+   }
+
+   function getBedroomPrice() {
+      let bedroomPrice = 0;
+      bedroomPrice = getBedroomCount() * 25;
+      return bedroomPrice;
+   }
+
+   function getBathroomPrice() {
+      let bathroomPrice = 0;
+      bathroomPrice = getBathroomCount() * 25;
+      return bathroomPrice;
+   }
+
+   let squareFootPrice = new Array();
+   squareFootPrice["900"] = 25;
+   squareFootPrice["1100"] = 50;
+   squareFootPrice["1500"] = 75;
+   squareFootPrice["1800"] = 100;
+   squareFootPrice["2000"] = 125;
+
+   function getGroutAndTileRestoreSquareFootage() {
+      let groutAndTileRestoreSquareFootage = theForm.elements["groutAndTileRestorationSquareFootage"];
+      let squareFootageCalculated = 0;
+      if (groutAndTileRestoreSquareFootage.value != "") {
+         squareFootageCalculated = parseInt(groutAndTileRestoreSquareFootage.value);
+      }
+      return squareFootageCalculated;
+   }
+
+   function getGroutAndTileRestorationPrice() {
+      let groutAndTileRestorationPrice = 0;
+      let restoreGroutAndTile = theForm.elements["groutAndTileRestoration"];
+
+      if (restoreGroutAndTile.checked == true) {
+         groutAndTileRestorationPrice = getGroutAndTileRestoreSquareFootage() * 2;
+      }
+      return groutAndTileRestorationPrice;
+   }
+
+   function getReplenishToiletriesPrice() {
+      let replenishToiletriesPrice = 0;
+      let replenishToiletries = theForm.elements["replenishToiletries"];
+
+      if (replenishToiletries.checked == true) {
+         replenishToiletriesPrice = getBathroomCount() * 20;
+      }
+
+      return replenishToiletriesPrice;
+   }
+
+   function getLaundryPrice() {
+      let laundryPrice = 0;
+      let cleanLaundry = theForm.elements["laundry"];
+
+      if (cleanLaundry.checked == true) {
+         laundryPrice = 25;
+      }
+
+      return laundryPrice;
+   }
+
+   function calculateTotal() {
+      let totalPrice =
+         getPropertyTypePrice() +
+         getBedroomPrice() +
+         getBathroomPrice() +
+         getSquareFootagePrice() +
+         getAppliancesPrice() +
+         getCabinetsPrice() +
+         getCarpetShampooPrice() +
+         getGroutAndTileRestorationPrice() +
+         getReplenishToiletriesPrice() +
+         getPlantCarePrice() +
+         getHospitalityPackagePrice() +
+         getLaundryPrice();
+
+      let quoteTotal = document.getElementById("quoteTotal");
+      quoteTotal.innerHTML = totalPrice;
+   }
+
+</script>
