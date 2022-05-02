@@ -2,7 +2,11 @@
 Things this form does not yet do:
 * tie into the application
 * use TypeScript to run the scripting (it's currently plain ol' JavaScript)
-* auto-hide and zero-out non-available options when choosing a different property:
+
+Changes made from the Liftoff Grime Pricing Sheet
+* The base price didn't make sense to me, and Lisa was busy, so I just decided to break the concepts of bed, bath, and square footage into different 
+* Tier 2 Hospitality is not defined in the spreadsheet, so I just made something up.
+* I did not implement auto-hide and zero-out non-available options when choosing a different property, because it seems like these options should always be available:
    * Investment Property Move-Out does not allow: 
       * Replenish Toiletries
       * Plant Care
@@ -19,30 +23,22 @@ Things this form does not yet do:
       * Cabinet Restore
       * Grout & Tile Restore
       * Replinish toiletries (again, probably an oversight)
-
-Changes made from the Liftoff Grime Pricing Sheet
-* The base price didn't make sense to me, and Lisa was busy, so I just decided to break the concepts of bed, bath, and square footage into different 
-* Tier 2 Hospitality is not defined in the spreadsheet, so I just made something up.
-
-
-Things that could probably be better:
-* Many of the functions are similar enough that they could be refactored into reusable helper functions. However, only a few are calculated the exact same way.
 -->
 
 <!DOCTYPE html>
 <head>
    <title>Quote form prototype</title>
 
+   <style>
+      label {
+         display:block;
+      }
+      .form-group {
+         margin: 10px 0;
+         padding: 10px 0;
+      }
+   </style>
 
-<style>
-    label {
-       display:block;
-    }
-    .form-group {
-       margin: 10px 0;
-       padding: 10px 0;
-    }
- </style>
  </head>
  <body>
    <h1>To get started, tell us about your place:</h1>
@@ -65,7 +61,7 @@ Things that could probably be better:
 
             <label for="officeClean">
                   <input type="radio" onclick="calculateTotal()" id="officeClean" name="selectedPlaceType" value="officeClean" />
-                  Office Clean
+                  Office   
             </label>
 
             <label for="AirBNB">
@@ -174,7 +170,7 @@ Things that could probably be better:
                      Which tier of hospitality would you like?
                      <select name="hospitalityTier" id="hospitalityTier" onchange="calculateTotal()">
                         <option value="None">Select a hospitality tier</option>
-                        <option value="hospitalityTier1">Tier 1: replenish fruit, snacks, water, mints, candy, fresh flowers replinish</option>
+                        <option value="hospitalityTier1">Tier 1: replenish fruit, snacks, water, mints, candy, fresh flowers</option>
                         <option value="hospitalityTier2">Tier 2: Tier 1 + Phone Concierge</option>
                      </select>
                   </label>
@@ -229,22 +225,25 @@ Things that could probably be better:
 <script>
    let theForm = document.forms["quoteForm"];
 
-   let propertyTypePrices = new Array();
-   propertyTypePrices["Investment Property Move In / Move Out"] = 100;
-   propertyTypePrices["officeClean"] = 150;
-   propertyTypePrices["AirBNB"] = 70;
+   let propertyTypePrices = {
+      "Investment Property Move In / Move Out": 100,
+      "officeClean": 150,
+      "AirBNB": 70
+   }
 
-   let squareFootagePrices = new Array();
-   squareFootagePrices["900"] = 0;
-   squareFootagePrices["1100"] = 25;
-   squareFootagePrices["1500"] = 50;
-   squareFootagePrices["1800"] = 75;
-   squareFootagePrices["2000+"] = 100;
+   let squareFootagePrices = {
+      "900": 0,
+      "1100": 25,
+      "1500": 50,
+      "1800": 75,
+      "2000+": 100,
+   }
 
-   let hospitalityTierPrices = new Array();
-   hospitalityTierPrices["None"] = 0;
-   hospitalityTierPrices["hospitalityTier1"] = 25;
-   hospitalityTierPrices["hospitalityTier2"] = 50;
+   let hospitalityTierPrices = {
+      "None": 0,
+      "hospitalityTier1": 25,
+      "hospitalityTier2": 50,
+   }
 
    function getBedroomCount() {
       let bedroomCount = theForm.elements["bedroomCount"];
@@ -267,21 +266,15 @@ Things that could probably be better:
    function getPropertyTypePrice() {
       let propertyTypePrice = 0;
 
-      let selectedPropertyType = theForm.elements["selectedPlaceType"];
-
-      for (var i = 0; i < selectedPropertyType.length; i++) {
-         if (selectedPropertyType[i].checked) {
-               propertyTypePrice = propertyTypePrices[selectedPropertyType[i].value];
-               break;
-         }
-      }
+      let selectedPropertyTypeValue = document.querySelector ('input[name="selectedPlaceType"]:checked') .value;
+      propertyTypePrice = propertyTypePrices[selectedPropertyTypeValue];
       return propertyTypePrice;
    }
 
    function getSquareFootagePrice() {
       let squareFootagePrice = 0;
-      let squareFootage = theForm.elements["squareFootage"];
-      squareFootagePrice = squareFootagePrices[squareFootage.value];
+      let squareFootageValue = theForm.elements["squareFootage"];
+      squareFootagePrice = squareFootagePrices[squareFootageValue.value];
       return squareFootagePrice;
    }
 
@@ -385,13 +378,6 @@ Things that could probably be better:
       bathroomPrice = getBathroomCount() * 25;
       return bathroomPrice;
    }
-
-   let squareFootPrice = new Array();
-   squareFootPrice["900"] = 25;
-   squareFootPrice["1100"] = 50;
-   squareFootPrice["1500"] = 75;
-   squareFootPrice["1800"] = 100;
-   squareFootPrice["2000"] = 125;
 
    function getGroutAndTileRestoreSquareFootage() {
       let groutAndTileRestoreSquareFootage = theForm.elements["groutAndTileRestorationSquareFootage"];
